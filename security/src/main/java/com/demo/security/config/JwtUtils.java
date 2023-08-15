@@ -20,11 +20,15 @@ public class JwtUtils {
     @Value("${token.signing.key}")
     private String jwtSecret;
 
+    @Value("${token.jwtExpirationMs}")
+    private int jwtExpirationMs;
+
 
     public String generateTokenFromUsername(String username) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -32,10 +36,9 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
 
-    public boolean validateJwtToken(String authToken) {
+        public boolean validateJwtToken(String authToken, String username) {
         try {
-            Jwts.parserBuilder().setSigningKey(key()).build().parse(authToken);
-            return true;
+            return username.equals(getUserNameFromJwtToken(authToken)) && !isTokenExpired(authToken);
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
@@ -47,6 +50,16 @@ public class JwtUtils {
         }
 
         return false;
+    }
+
+    private boolean isTokenExpired(String authToken) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key())
+                .build()
+                .parseClaimsJws(authToken)
+                .getBody()
+                .getExpiration()
+                .before(new Date());
     }
 
     public String getUserNameFromJwtToken(String token) {
