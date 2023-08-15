@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -42,7 +43,7 @@ public class AuthenticationService {
         userEmail = jwtUtils.getUserNameFromJwtToken(refreshToken);
         if (userEmail != null) {
             User user = new User("Admin", "password");
-            if (jwtUtils.validateJwtToken(refreshToken)) {
+            if (jwtUtils.validateJwtToken(refreshToken, user.getUsername())) {
                 String accessToken = jwtUtils.generateTokenFromUsername(user.getUsername());
                 return Optional.of(AuthenticationResponse.builder()
                         .accessToken(accessToken)
