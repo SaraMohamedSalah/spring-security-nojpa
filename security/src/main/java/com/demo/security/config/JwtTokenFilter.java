@@ -43,7 +43,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         if (!userEmail.isEmpty()
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = customUserDetailsService.loadUserByUsername(userEmail);
-            if (jwtUtils.validateJwtToken(jwt)) {
+            if (jwtUtils.validateJwtToken(jwt, userDetails.getUsername())) {
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, null);
